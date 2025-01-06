@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transaction Classifier</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">Transaction Classifier</h1>
+        
+        <!-- Training Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Train Model</h2>
+            <textarea id="trainingData" class="w-full h-32 border rounded p-2 mb-4" 
+                      placeholder="Enter training data in JSON format..."></textarea>
+            <button onclick="trainModel()" 
+                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Train Model
+            </button>
+        </div>
+
+        <!-- Classification Section -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Classify Transaction</h2>
+            <input type="text" id="description" 
+                   class="w-full border rounded p-2 mb-2" 
+                   placeholder="Transaction description...">
+            <input type="number" id="amount" 
+                   class="w-full border rounded p-2 mb-4" 
+                   placeholder="Amount (optional)">
+            <button onclick="classifyTransaction()" 
+                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Classify
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="mt-8"></div>
+    </div>
+
+    <script>
+        async function trainModel() {
+            const trainingData = document.getElementById('trainingData').value;
+            try {
+                const response = await fetch('/api/train', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transactions: JSON.parse(trainingData)
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function classifyTransaction() {
+            const description = document.getElementById('description').value;
+            const amount = document.getElementById('amount').value;
+            
+            try {
+                const response = await fetch('/api/classify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: description,
+                        amount: amount ? parseFloat(amount) : null
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = `
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold mb-4">Classification Results</h2>
+                    <p class="text-lg mb-2">Predicted Category: <strong>${data.category}</strong></p>
+                    <h3 class="font-semibold mb-2">Confidence Scores:</h3>
+                    <ul class="space-y-1">
+            `;
+            
+            for (const [category, probability] of Object.entries(data.confidence_scores)) {
+                const percentage = (probability * 100).toFixed(1);
+                html += `
+                    <li class="flex items-center">
+                        <div class="w-32">${category}:</div>
+                        <div class="flex-1 bg-gray-200 rounded-full h-4 ml-2">
+                            <div class="bg-blue-500 rounded-full h-4" 
+                                 style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="ml-2">${percentage}%</div>
+                    </li>
+                `;
+            }
+            
+            html += `
+                    </ul>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
