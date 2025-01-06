@@ -1,0 +1,20 @@
+example_training_data = [
+    {
+        "date": "2024-01-01",
+        "description": "WALMART STORE 123",
+        "amount": 50.25,
+        "category": "Groceries"  
+    },
+    {
+        "date": "2024-01-02",
+        "description": "NETFLIX DIGITAL",
+        "amount": 14.99,
+        "category": "Entertainment"
+    },
+    {
+        "date": "2024-01-03",
+        "description": "SHELL OIL 567",
+        "amount": 45.00,
+        "category": "Transportation"
+    }
+]
